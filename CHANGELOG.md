@@ -10,7 +10,7 @@ Initial release after converting several versions of functions files into class 
 
 A long awaited update to the library system, updates as follow:
 
-- Added FTP support, 'ftp::' (alpha tested).
+- Added FTP support, `ftp::` (alpha tested).
 - Updated string encode functions, baseencode -> encode, basedecode -> decode.
    - `str::encode();`
    - `str::decode();`
