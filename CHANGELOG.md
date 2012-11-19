@@ -1,4 +1,4 @@
-Sym PHP Library Changes
+PHP Library Changes
 ==================
 
 ##Release 1.0 July 2012
@@ -10,9 +10,12 @@ Initial release after converting several versions of functions files into class 
 
 A long awaited update to the library system, updates as follow:
 
-- Added FTP support (alpha tested).
+- Added FTP support, 'ftp::' (alpha tested).
 - Updated string encode functions, baseencode -> encode, basedecode -> decode.
+   - `str::encode();`
+   - `str::decode();`
 - Updated sanitize function to move acceptable HTML strings into global config value.
-- Add timedate class, with format and validate method.
-- Add password class with encrypt and memorable methods.
-- Update titlecase in str class, was running duplicate against camel-case.
+- Add `timedate::` class, with `format()` and `valid()` method.
+- Add `password::` class with `encrypt()` and `memorable()` methods.
+- Update `str::titlecase()`, was running duplicate against camelcase.
+- Added `str::numbers($str);` to convert numbers to number words.

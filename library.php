@@ -1166,7 +1166,7 @@ class password {
 	*/
 	static function memorable($length=2) {
 		$string = "";
-		
+
 		for ($i=0; $i<$length ; $i++) {
 			$string .= ucfirst(self::$memorables[mt_rand(0, sizeof(self::$memorables))]);
 		}
@@ -1385,6 +1385,16 @@ class str {
 
 
 	/*
+	 * Adds an apostrohpe to a string if applicable - Works on a word basis
+	 * @param  (string) $string - The string
+	 * @return (string) - String + apostraphe
+	*/
+	static function apostrophe($string) {
+		return (substr($string,-1,1)=='s' || substr($string,-1,1)=='z')? $string .= "'" : $string .= "'s";
+	}
+
+
+	/*
 	 * Base 64 encode a string
 	 * @param  (string) $string - String to encode
 	 * @return (string)
@@ -1405,21 +1415,19 @@ class str {
 
 
 	/*
-	 * Serialize to a storable representation of a value
-	 * @param  (mixed) $value - Value to serialize
+	 * Create a excert of text
+	 * @param  (string) $string - The source string
+	 * @param  (int) $length - Length of excert in characters
+	 * @param  (string) $break - break to display
+	 * @param  (boolean) $removehtml - remove HTML tags
 	 * @return (string)
 	*/
-	static function serial($value) {
-		return serialize($value);
-	}
+	static function excerpt($string, $length=140, $break='...', $removehtml=true) {
+		if($removehtml) $string = strip_tags($string);
+		$string = str_ireplace("\n", ' ', str::trim($string));
 
-	/*
-	 * Unserialize a value to object
-	 * @param  (mixed) $value - Value to unserialize
-	 * @return (string)
-	*/
-	static function deserial($value) {
-		return unserialize($value);
+		if(strlen($string) <= $length) return $string;
+		return ($length==0)? $string : substr($string, 0, strrpos(substr($string, 0, $length),' ')).$break;
 	}
 
 
@@ -1450,13 +1458,21 @@ class str {
 
 
 	/*
-	 * Improved Trim method
-	 * @param  (string) $string - String requiring trim
+	 * Sanetize string
+	 * @param  (string) $text - Text string
+	 * @param  (string) $nlc - New line convert, If false will be replaced
+	 * @param  (string) $allowed - Allowed HTML tags, defaults provided
 	 * @return (string)
 	*/
-	static function trim($string) {
-		$string = preg_replace('/\s\s+/u',' ',$string);
-		return trim($string);
+	static function sanetize($text, $nlc=true, $allowed='') {
+		$StringAllow = ($allowed!='')? $allowed : conf::get('AllowSanetize');
+
+		$text = str::unquote($text);
+		$text = strip_tags($text, $StringAllow);
+		$text = ($nlc)?nl2br($text):$text;
+		$encoding = mb_detect_encoding($text,'UTF-8, ISO-8859-1, GBK');
+		$text = ($encoding!='UTF-8')?iconv($encoding,'utf-8',$text):$text;
+		return str::trim($text);
 	}
 
 
@@ -1473,21 +1489,13 @@ class str {
 
 
 	/*
-	 * Sanetize string
-	 * @param  (string) $text - Text string
-	 * @param  (string) $nlc - New line convert, If false will be replaced
-	 * @param  (string) $allowed - Allowed HTML tags, defaults provided
+	 * Improved Trim method
+	 * @param  (string) $string - String requiring trim
 	 * @return (string)
 	*/
-	static function sanetize($text, $nlc=true, $allowed='') {
-		$StringAllow = ($allowed!='')? $allowed : conf::get('AllowSanetize');
-
-		$text = str::unquote($text);
-		$text = strip_tags($text, $StringAllow);
-		$text = ($nlc)?nl2br($text):$text;
-		$encoding = mb_detect_encoding($text,'UTF-8, ISO-8859-1, GBK');
-		$text = ($encoding!='UTF-8')?iconv($encoding,'utf-8',$text):$text;
-		return str::trim($text);
+	static function trim($string) {
+		$string = preg_replace('/\s\s+/u',' ',$string);
+		return trim($string);
 	}
 
 
@@ -1532,12 +1540,21 @@ class str {
 
 
 	/*
-	 * Adds an apostrohpe to a string if applicable - Works on a word basis
-	 * @param  (string) $string - The string
-	 * @return (string) - String + apostraphe
+	 * Serialize to a storable representation of a value
+	 * @param  (mixed) $value - Value to serialize
+	 * @return (string)
 	*/
-	static function apostrophe($string) {
-		return (substr($string,-1,1)=='s' || substr($string,-1,1)=='z')? $string .= "'" : $string .= "'s";
+	static function serial($value) {
+		return serialize($value);
+	}
+
+	/*
+	 * Unserialize a value to object
+	 * @param  (mixed) $value - Value to unserialize
+	 * @return (string)
+	*/
+	static function deserial($value) {
+		return unserialize($value);
 	}
 
 
@@ -1557,23 +1574,6 @@ class str {
 		} else {
 			return $many;
 		}
-	}
-
-
-	/*
-	 * Create a excert of text
-	 * @param  (string) $string - The source string
-	 * @param  (int) $length - Length of excert in characters
-	 * @param  (string) $break - break to display
-	 * @param  (boolean) $removehtml - remove HTML tags
-	 * @return (string)
-	*/
-	static function excerpt($string, $length=140, $break='...', $removehtml=true) {
-		if($removehtml) $string = strip_tags($string);
-		$string = str_ireplace("\n", ' ', str::trim($string));
-
-		if(strlen($string) <= $length) return $string;
-		return ($length==0)? $string : substr($string, 0, strrpos(substr($string, 0, $length),' ')).$break;
 	}
 
 
@@ -1606,13 +1606,28 @@ class str {
 	/*
 	 * Unquotes an escaped stirng
 	 * @param  (string) $string - String to unquote
-	 * @return  (string) - Our unquoted string
+	 * @return (string) - Our unquoted string
 	*/
 	static function unquote($string) {
 		$string = stripslashes($string);
 		$string = stripslashes($string);
 		return (string)$string;
 	}
+
+
+	/*
+	 * Convert any numbers in a string back to words
+	 * @param  (string) $string - String to convert numbers to words
+	 * @return (string) - An updated string with word numbers
+	*/
+	function numbers($string){
+	$nums  = array('0','1','2','3','4','5','6','7','8','9');
+	$match = array('zero','one','two','three','four','five','six','seven','eight','nine');
+	foreach ($nums as $key => $value) {
+		$string = str_replace($nums[$key], $match[$key], $string);
+	}
+	return $string;
+}
 
 
 } /* String Methods */
@@ -1632,6 +1647,30 @@ class url {
 	static function current() {
 		$host = (server::get('https')!='' || server::get('server_port')==443)? "https://" : "http://";
 		return $host.server::get('http_host').server::get('request_uri');
+	}
+
+
+	/*
+	 * Lets go places
+	 * @param  (string) $url - URL to switch to
+	 * @param  (string) $status - Optional status code
+	 * @return (header)
+	*/
+	static function go($url,$status=false) {
+		if ($status) {
+			switch($status) {
+			case 301:
+			  header('HTTP/1.1 301 Moved Permanently');
+			  break;
+			case 302:
+			  header('HTTP/1.1 302 Found');
+			  break;
+			case 303:
+			  header('HTTP/1.1 303 See Other');
+			  break;
+			}
+		}
+		header("Location: $url");
 	}
 
 
@@ -1664,30 +1703,6 @@ class url {
 			$url = ar::get($a, 0);
 		}
 		return $url;
-	}
-
-
-	/*
-	 * Lets go places
-	 * @param  (string) $url - URL to switch to
-	 * @param  (string) $status - Optional status code
-	 * @return (header)
-	*/
-	static function go($url,$status=false) {
-		if ($status) {
-			switch($status) {
-			case 301:
-			  header('HTTP/1.1 301 Moved Permanently');
-			  break;
-			case 302:
-			  header('HTTP/1.1 302 Found');
-			  break;
-			case 303:
-			  header('HTTP/1.1 303 See Other');
-			  break;
-			}
-		}
-		header("Location: $url");
 	}
 
 
