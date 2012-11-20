@@ -2,7 +2,7 @@
 /*
  * PHP Library -- A simplified toolkit for PHP
  *
- * @ version 1.1b
+ * @ version 1.2 Beta(β)
  * @ author Simon Fraser <http://simonf.co.uk>
  * @ acknowledgement php.net community, kirby toolkit
  * @ copyright Copyright (c) 2012 Simon Fraser
@@ -450,7 +450,7 @@ class db extends mysqli {
 	 * Insert row into database table
 	 * @param  (string) $table - Query table name
 	 * @param  (array) $labels - Array of field labels
-	 * @param  (array) $values - Array of row values
+	 * @param  (multidimension array) $values - Array of row values
 	 * @param  (boolean) $echo - Show constructed query as echo debug output
 	 * @return (int) - Returns ID of new (last) row
 	*/
@@ -462,16 +462,12 @@ class db extends mysqli {
 				$ourlabels .= ($label).",";
 			}
 			$ourlabels = substr($ourlabels,0,-1);
-		} else {
-			$ourlabels = $labels;
 		}
 		if (is_array($values)) {
 			foreach ($values as $value) {
 				$ourvalues .= "'".(str::escape($value))."',";
 			}
 			$ourvalues = substr($ourvalues,0,-1);
-		} else {
-			$ourvalues = $values;
 		}
 		$ourquery = "INSERT INTO ".$table." (".$ourlabels.") VALUES (".$ourvalues.")";
 		if($echo == true) echo $ourquery;
@@ -1024,6 +1020,44 @@ class html {
 
 
 	/*
+	 * Create a stylesheet link
+	 * @param  (string) $file - File location of stylesheet
+	 * @return (string)
+	*/
+	static function css($file) {
+		return '<link rel="stylesheet" href="'.$file.'" />';
+	}
+
+
+	/*
+	 * Creates a encoded email hyperlink
+	 * @param  (string) $email - The email address
+	 * @param  (string) $text - optional text to use as hyperlink, default use email
+	 * @param  (string) $title - optional HTML title tag
+	 * @param  (string) $class - optional HTML class
+	 * @return (string) - A formatted mailto hyperlink
+	*/
+	static function email($email, $text=false, $class=false, $title=false) {
+		$string = (empty($text))? $email : $text;
+		$email  = str::ascii($email);
+
+		$class = (!empty($class))? ' class="'.$class.'" ':'';
+		$title = (!empty($title))? ' title="'.$title.'" ':' ';
+		return '<a'.$title.$class.'href="mailto:'.$email.'">'.str::ascii($string).'</a>';
+	}
+
+
+	/*
+	 * Create a javascript link
+	 * @param  (string) $file - File location of script
+	 * @return (string)
+	*/
+	static function js($file) {
+		return '<script src="'.$file.'"></script>';
+	}
+
+
+	/*
 	 * Creates a link
 	 * @param  (string) $link - The URL
 	 * @param  (string) $text - Text for the link tag, If false the URL will be used
@@ -1041,40 +1075,75 @@ class html {
 
 
 	/*
-	 * Creates a encoded email hyperlink
-	 * @param  (string) $email - The email address
-	 * @param  (string) $text - optional text to use as hyperlink, default use email
-	 * @param  (string) $title - optional HTML title tag
-	 * @param  (string) $class - optional HTML class
-	 * @return (string) - A formatted mailto hyperlink
-	*/
-	static function email($email, $text=false, $class=false, $title=false) {
-		$string = (empty($text))? $email : $text;
-		$email  = str::ascii($email);
+	 * Generate a Table
+	 * @param  (array) $headings - An array of table headings
+	 * @param  (multidimension array) $rows - Multidimension Array of rows
+	 * @param  (string) $class - optional class string
+	 * @param  (multidimension array) $tfoot - Multidimension Array of rows for tfoot
+	 */
+	static function table($headings=null, $rows, $class='', $tfoot=null) {
 
-		$class = (!empty($class))? ' class="'.$class.'" ':'';
-		$title = (!empty($title))? ' title="'.$title.'" ':'';
-		return '<a '.$title.''.$class.'href="mailto:'.$email.'">'.str::ascii($string).'</a>';
-	}
+		$html = '<table border="0" cellpadding="0" cellspacing="0" class="'.$class.'">'."\n";
 
+		   //Table Headings
+		   if ($headings!=null) {
+			   $html .= '<thead>'."\n";
+			   	$html .= '<tr>'."\n";
+			   		//Loop Headings
+			   		foreach ($headings as $thead) {
+			   			$html .= ' <th>'.$thead.'</th> ';
+			   		}
+			   	$html .= '</tr>'."\n";
+			   $html .= '</thead>'."\n";
+			} // !Headings
 
-	/*
-	 * Create a stylesheet link
-	 * @param  (string) $file - File location of stylesheet
-	 * @return (string)
-	*/
-	static function css($file) {
-		return '<link rel="stylesheet" href="'.$file.'" />';
-	}
+			//Table Foot
+			if ($tfoot!=null) {
+			   $html .= '<tfoot>'."\n";
+			   	if (is_array($tfoot)) {
+			   		if (is_array($tfoot[0])){ //Multi array
+				   		foreach ($tfoot as $cells) {
+				   			$html .= '<tr>';
+				   			foreach ($cells as $key => $value) {
+				   				$html .= ' <td>'.$value.'</td> ';
+				   			}
+				   			$html .= '</tr>'."\n";
+				   		}
+			   		} else { //Single array
+			   			$html .= '<tr>';
+			   			foreach ($tfoot as $cells) {
+			   				$html .= ' <td>'.$cells.'</td> ';
+			   			}
+			   			$html .= '</tr>'."\n";
+			   		}
+			   	}//tfoot array
+			   $html .= '</tfoot>'."\n";
+			} // !Foot
 
+			//Table Body
+			if (is_array($rows)) {
+		   $html .= '<tbody>'."\n";
+		   	if (is_array($rows[0])) {
+		   	foreach ($rows as $cells) {
+		   		$html .= '<tr>';
+		   		foreach ($cells as $key => $value) {
+		   			$html .= ' <td>'.$value.'</td> ';
+		   		}
+		   		$html .= '</tr>'."\n";
+		   	}
+		   	} else {
+		   		$html .= '<tr>';
+		   		foreach ($rows as $cells) {
+		   			$html .= ' <td>'.$cells.'</td> ';
+		   		}
+		   		$html .= '</tr>'."\n";
+		   	}
+		   $html .= '</tbody>'."\n";
+			}
 
-	/*
-	 * Create a javascript link
-	 * @param  (string) $file - File location of script
-	 * @return (string)
-	*/
-	static function js($file) {
-		return '<script src="'.$file.'"></script>';
+	 	$html .='</table>';
+
+	 	return $html;
 	}
 
 
@@ -1620,7 +1689,7 @@ class str {
 	 * @param  (string) $string - String to convert numbers to words
 	 * @return (string) - An updated string with word numbers
 	*/
-	function numbers($string){
+	static function numbers($string){
 	$nums  = array('0','1','2','3','4','5','6','7','8','9');
 	$match = array('zero','one','two','three','four','five','six','seven','eight','nine');
 	foreach ($nums as $key => $value) {
@@ -1731,11 +1800,80 @@ class url {
 	 * @param  (string) $url - String to test
 	 * @return (boolean)
 	*/
-	function valid($url) {
+	static function valid($url) {
 		return preg_match('|^(https?\:\:?\/\/)?(www.)?[^.]+\.\w{2,8}|i', $url);
 	}
 
 
 } /* Url Methods */
 
-?>
+
+/*
+ * Video
+ * Set of video methods
+*/
+class video {
+
+
+	/*
+	 * Embed code for Offsite Video Playback (YouTube|Vimeo)
+	 * @param  (string) $url - Playback embed URL
+	 * @param  (int) $width - Pixel width of video player
+	 * @param  (int) $height - Pixel height of video player
+	 * @param  (boolean) $fullscreen - Wether to allow full screen mode
+	 * @return (string) - Our formatted HTML Output video
+	*/
+	static function embed($url, $width=500, $height=281, $fullscreen=true) {
+		$screen = ($fullscreen)? "allowfullscreen" : "" ;
+		return '<iframe width="'.$width.'" height="'.$height.'" src="'.$url.'" frameborder="0" '.$screen.'></iframe>';
+	}
+
+
+	/*
+	 * Parse YouTube URL
+	 * @param  (string) $link - String contating youtube url to get playcode
+	 * @return (string) - Embed URL
+	*/
+	static function youtube($link) {
+		$embedhost = "http://www.youtube.com/embed/";
+		$uri = parse_url($link);
+
+		//For seriously malformed urls
+		if ($uri === false) return false;
+
+		//Check for domain to decode
+		switch ($uri['host']) {
+			case 'youtu.be':
+				return $embedhost.substr($uri['path'], 1);
+				break;
+			case 'youtube.com':
+			case 'www.youtube.com':
+				parse_str($uri['query'], $params);
+				return $embedhost.$params['v'];
+				break;
+			default:
+				return false;
+				break;
+		} //switch
+	}
+
+
+	/*
+	 * Parse Vimeo URL
+	 * @param  (string) $link - String contating vimeo URL to get playcode
+	 * @param  (string) @colour - String contating hex colour for alternate vimeo players
+	 * @return (string) - Embed URL
+	*/
+	static function vimeo($link,$colour='00fbff') {
+		$embedhost = "http://player.vimeo.com/video/";
+		$embedvars = "?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;color=$colour";
+		$uri = parse_url($link);
+
+		//For seriously malformed urls
+		if ($uri === false) return false;
+
+		return $embedhost.substr($uri['path'], 1).$embedvars;
+	}
+
+
+} /* Video methods */
