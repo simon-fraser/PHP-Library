@@ -2,7 +2,7 @@
 /*
  * PHP Library -- A simplified toolkit for PHP
  *
- * @ version 1.2 Beta(β)
+ * @ version 1.3 Beta(β)
  * @ author Simon Fraser <http://simonf.co.uk>
  * @ acknowledgement php.net community, kirby toolkit
  * @ copyright Copyright (c) 2012 Simon Fraser
@@ -1877,3 +1877,90 @@ class video {
 
 
 } /* Video methods */
+
+
+/*
+ * Visitor
+ * Set of visitor information methods
+*/
+class visitor {
+
+
+	/*
+	 * Get visiting users browser information
+	 * http://stackoverflow.com/questions/1895727/how-can-i-detect-the-browser-with-php-or-javascript#answer-1896680 - Hard to Beat this
+	 *
+	 * @return (array) - An array of information about the visitors browser
+	*/
+	static function browser() {
+		$browser = array(
+			'name'      => 'unknown',
+			'version'   => '0.0.0',
+			'majorver'  => 0,
+			'minorver'  => 0,
+			'build'     => 0,
+			'useragent' => str::lower(server::get('HTTP_USER_AGENT'))
+		);
+
+		$browsers = array(
+			'firefox', 'msie', 'opera', 'chrome', 'safari', 'mozilla', 'seamonkey', 'konqueror', 'netscape','gecko', 'navigator', 'mosaic', 'lynx', 'amaya', 'omniweb', 'avant', 'camino', 'flock', 'aol'
+		);
+
+		foreach($browsers as $_browser) {
+			if (preg_match("/($_browser)[\/ ]?([0-9.]*)/", $browser['useragent'], $match)) {
+				$browser['name'] = $match[1];
+				$browser['version'] = $match[2];
+				@list($browser['majorver'], $browser['minorver'], $browser['build']) = explode('.', $browser['version']);
+				break;
+			}
+		}
+
+		return $browser;
+	}
+
+
+	/*
+	 * Get visiting users IP address
+	 * @return (string) - IP address of visitor
+	*/
+	static function ip() {
+		return server::get('remote_addr');
+	}
+
+
+	/*
+	 * Get visiting users Operating System
+	*/
+	static function os() {
+		$OS = array(
+		'iPhone' 	 => 'iphone',
+		'iPad'		 => 'ipad',
+		'iPod'		 => 'ipod',
+		'Android'	 => 'android',
+		'BlackBerry' => 'blackberry',
+		//May Expand Phones at a Later Date
+		'Win 98' 	 => '(win98)|(windows 98)',
+		'Win 2000' 	 => '(windows 2000)|(windows nt 5.0)',
+		'Win ME' 	 => 'windows me',
+		'Win NT 4.0' => '(winnt)|(windows nt 4.0)|(winnt4.0)|(windows nt)',
+		'Win XP' 	 => '(windows xp)|(windows nt 5.1)',
+		'Win Vista'  => 'windows nt 6.0',
+		'Win 7' 		 => '(windows nt 6.1)|(windows nt 7.0)',
+		'Linux' 		 => '(x11)|(linux)',
+		'Mac OS' 	 => '(mac_powerpc)|(macintosh)|(mac os)'
+		);
+
+		$os = 'Unknown';
+		$agent = str::lower(server::get('HTTP_USER_AGENT'));
+
+		foreach($OS as $Name => $index) {
+			if (preg_match("/$index/i", $agent)) {
+				$os = $Name;
+				break;
+			}
+		}
+	return $os;
+	}
+
+
+}

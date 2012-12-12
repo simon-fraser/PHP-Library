@@ -1,6 +1,12 @@
 PHP Library Changes
 ==================
 
+##Release 1.3 December 2012
+- Added new `visitor` class.
+   - `visitor::browser()` Will return the visitors browser information
+   - `visitor::ip()` Will return visitors IP address
+   - `visitor::os()` Will return visitors Operating System title
+
 ##Release 1.2 November 2012
 
 - Added table method into html class `html::table()`.
