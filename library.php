@@ -2,7 +2,7 @@
 /*
  * PHP Library -- A simplified toolkit for PHP
  *
- * @ version 1.3 Beta(β)
+ * @ version 1.3.1 Beta(β)
  * @ author Simon Fraser <http://simonf.co.uk>
  * @ acknowledgement php.net community, kirby toolkit
  * @ copyright Copyright (c) 2012 Simon Fraser
@@ -439,7 +439,7 @@ class db extends mysqli {
 	 * @return (array-object) Query results
 	 *
 	*/
-	public function join($tabel_a, $table_b, $on, $after="*", $where=null, $order=null, $limit=null, $echo=false) {
+	public function join($table_a, $table_b, $on, $after="*", $where=null, $order=null, $limit=null, $echo=false) {
 		$ourquery = "SELECT ".$after." FROM ".$table_a." INNER JOIN ".$table_b." ON ".$on." ".$where." ".$order." ".$limit;
 		if($echo == true) echo $ourquery;
 		return self::query($ourquery);

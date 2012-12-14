@@ -1,6 +1,9 @@
 PHP Library Changes
 ==================
 
+##Minor Release 1.3.1 December 2012
+- Error with `db::join()` varable `$table_a` error.
+
 ##Release 1.3 December 2012
 - Added new `visitor` class.
    - `visitor::browser()` Will return the visitors browser information
