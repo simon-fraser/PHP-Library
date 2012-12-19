@@ -458,10 +458,11 @@ class db extends mysqli {
 		$ourlabels='';
 		$ourvalues='';
 		if (is_array($labels)) {
-			foreach ($labels as $label) {
-				$ourlabels .= ($label).",";
-			}
-			$ourlabels = substr($ourlabels,0,-1);
+			// foreach ($labels as $label) {
+			// 	$ourlabels .= ($label).",";
+			// }
+			// $ourlabels = substr($ourlabels,0,-1);
+			$ourlabels = implode(',', $labels);
 		}
 		if (is_array($values)) {
 			foreach ($values as $value) {
@@ -1437,6 +1438,95 @@ class server {
 */
 class str {
 
+  //
+  // Convert word to hexadecimal color
+  // @param (string) $string - String to convert
+  // @return (string) - Converted Colour value
+  //
+  static function hexcolor ( $string ) {
+    $hexcolor = md5 ( $string );
+    $hexcolor = substr($hexcolor, 0, 6);
+    return '#' . $hexcolor;
+  }
+
+  //
+  // Curly Quotes and other Text Goodness
+  // @param (string) $string - Text to process
+  // @return (string) - Processed text
+  //
+
+  static function curly ($string) {
+      if ($string == '') {
+        return '';
+      }
+      $search = array(
+                      ' \'',
+                      '\' ',
+                      ' "',
+                      '" ',
+                      ' “\'',
+                      '\'” ',
+                      ' ‘"',
+                      ' "’',
+                      '>\'',
+                      '\'<',
+                      '>"',
+                      '"<',
+                      '>“\'',
+                      '\'”<',
+                      '>‘"',
+                      '>"’',
+                      '…'
+                      );
+
+      $replace = array(
+                      ' ‘',
+                      '’ ',
+                      ' “',
+                      '” ',
+                      ' “‘',
+                      '’" ',
+                      ' ‘“',
+                      ' ”’',
+                      '>‘',
+                      '’<',
+                      '>“',
+                      '”<',
+                      '>“‘',
+                      '’"<',
+                      '>‘“',
+                      '>”’',
+                      '…'
+                       );
+
+      $searchsingle = array(
+                '"',
+                "'"
+                );
+
+      $replacestart = array(
+                '“',
+                '‘'
+                );
+
+      $replaceend = array(
+                '”',
+                '’'
+                );
+
+      $string = str_replace('\'', '’', str_replace($search, $replace, $string));
+      $string = preg_replace('/<([^<>]+)>/e', '"<" .str_replace("”", \'"\', "$1").">"', $string);
+      $string = preg_replace('/<([^<>]+)>/e', '"<" .str_replace("’", "\'", "$1").">"', $string);
+      $first = $string{0};
+      $first = str_replace($searchsingle, $replacestart, $first);
+      $string = $first . substr($string, 1);
+      $invert = strrev( $string );
+      $last = $invert{0};
+      $last = str_replace($searchsingle, $replaceend, $last);
+      $string = strrev(substr($invert, 1)) . $last;
+      return $string;
+  }
+
 
 	/*
 	 * Encode a string to ASCII
@@ -1454,7 +1544,7 @@ class str {
 
 
 	/*
-	 * Adds an apostrohpe to a string if applicable - Works on a word basis
+	 * Adds an apostrophe to a string if applicable - Works on a word basis
 	 * @param  (string) $string - The string
 	 * @return (string) - String + apostraphe
 	*/
@@ -1484,7 +1574,7 @@ class str {
 
 
 	/*
-	 * Create a excert of text
+	 * Create a excerpt of text
 	 * @param  (string) $string - The source string
 	 * @param  (int) $length - Length of excert in characters
 	 * @param  (string) $break - break to display
