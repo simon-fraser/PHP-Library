@@ -1779,6 +1779,7 @@ class str {
 	 * @return (string) - An updated string with word numbers
 	*/
 	static function numbers($string){
+		$string = '' . $string;
 	$nums  = array('0','1','2','3','4','5','6','7','8','9');
 	$match = array('zero','one','two','three','four','five','six','seven','eight','nine');
 	foreach ($nums as $key => $value) {
