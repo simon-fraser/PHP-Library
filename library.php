@@ -14,7 +14,6 @@ conf::set('AllowSanetize', '<a><b><br><em><h1><h2><h3><h4><h5><h6><i><img><li><o
 error_reporting(E_ALL);
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-
 /*
  * Array
  * Set of array methods
