@@ -1,6 +1,19 @@
 PHP Library Changes
 ==================
 
+##Release 1.5 January 2013
+- `content::get()`- Removed `str::sanetize()`, Can be called separately.
+- Removed strip_tags from `str::sanetize()`.
+- Added `str::striphtml()` To remove HTML tags from a string.
+- Added `str::replace()` To normalize str_replace in line with toolbox
+
+
+##Release 1.4 December 2012
+- Additional Functionality Added by [David Turner](http://www.davidturner.name/)
+	- `str::hexcolor()` Which will generate a hex colour code from a given string
+	- `str::curly()` Which will help they styling of quotations in a string, by switching them for their curly counterparts
+	- Improved stability in `db::insert()`
+
 ##Minor Release 1.3.1 December 2012
 - Error with `db::join()` varable `$table_a` error.
 

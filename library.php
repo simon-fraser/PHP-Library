@@ -2,7 +2,7 @@
 /*
  * PHP Library -- A simplified toolkit for PHP
  *
- * @ version 1.3.1 Beta(β)
+ * @ version 1.5 Beta(β)
  * @ author Simon Fraser <http://simonf.co.uk>
  * @ acknowledgement php.net community, kirby toolkit
  * @ copyright Copyright (c) 2012 Simon Fraser
@@ -11,6 +11,7 @@
 
 conf::set('charset', 'utf-8');
 conf::set('AllowSanetize', '<a><b><br><em><h1><h2><h3><h4><h5><h6><i><img><li><ol><p><strong><u><ul>');
+
 error_reporting(E_ALL);
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -247,7 +248,7 @@ class content {
 	 * @return (string)
 	*/
 	static function get($key) {
-		return str::sanetize(ar::get(self::$contents,$key));
+		return ar::get(self::$contents,$key);
 	}
 
 
@@ -464,10 +465,11 @@ class db extends mysqli {
 			$ourlabels = implode(',', $labels);
 		}
 		if (is_array($values)) {
-			foreach ($values as $value) {
-				$ourvalues .= "'".(str::escape($value))."',";
-			}
-			$ourvalues = substr($ourvalues,0,-1);
+			// foreach ($values as $value) {
+			// 	$ourvalues .= "'".(str::escape($value))."',";
+			// }
+			// $ourvalues = substr($ourvalues,0,-1);
+			$ourvalues = ar::flatten($values, "'"."',");
 		}
 		$ourquery = "INSERT INTO ".$table." (".$ourlabels.") VALUES (".$ourvalues.")";
 		if($echo == true) echo $ourquery;
@@ -756,6 +758,11 @@ class fs {
 	}
 
 
+	/*
+	 * Get file info
+	 * @param  (string) $file - The file
+	 * @return file information
+	*/
 	static function info($file) {
 		if (!file_exists($file)) return false;
 		return stat($file);
@@ -831,7 +838,7 @@ class fs {
 	 * @param  (string) $content - The file content to write
 	 * @return (boolean)
 	*/
-	static function append ($file,$content) {
+	static function append($file,$content) {
 		return self::write($file,$content,true);
 	}
 
@@ -842,7 +849,7 @@ class fs {
 	 * @param  (string) $new - New filename & location
 	 * @return (boolean)
 	*/
-	static function move($old, $new) {
+	static function move($old,$new) {
 		if(!file_exists($old)) return false;
 		return (@rename($old,$new) && file_exists($new))? true : false;
 	}
@@ -1040,7 +1047,6 @@ class html {
 	static function email($email, $text=false, $class=false, $title=false) {
 		$string = (empty($text))? $email : $text;
 		$email  = str::ascii($email);
-
 		$class = (!empty($class))? ' class="'.$class.'" ':'';
 		$title = (!empty($title))? ' title="'.$title.'" ':' ';
 		return '<a'.$title.$class.'href="mailto:'.$email.'">'.str::ascii($string).'</a>';
@@ -1437,27 +1443,30 @@ class server {
 */
 class str {
 
-  //
-  // Convert word to hexadecimal color
-  // @param (string) $string - String to convert
-  // @return (string) - Converted Colour value
-  //
-  static function hexcolor ( $string ) {
-    $hexcolor = md5 ( $string );
+
+  /*
+   * Convert word to hexadecimal color
+   * @param (string) $string - String to convert
+   * @return (string) - Converted Colour value
+   * Contributed by David Turner <http://davidturner.name>
+  */
+  static function hexcolor($string) {
+    $hexcolor = md5 ($string);
     $hexcolor = substr($hexcolor, 0, 6);
     return '#' . $hexcolor;
   }
 
-  //
-  // Curly Quotes and other Text Goodness
-  // @param (string) $string - Text to process
-  // @return (string) - Processed text
-  //
 
-  static function curly ($string) {
-      if ($string == '') {
-        return '';
-      }
+  /*
+   * Curly Quotes and other Text Goodness
+   * @param (string) $string - Text to process
+   * @return (string) - Processed text
+   * Contributed by David Turner <http://davidturner.name>
+  */
+
+  static function curly($string) {
+      if ($string == '') return '';
+
       $search = array(
                       ' \'',
                       '\' ',
@@ -1616,21 +1625,30 @@ class str {
 
 
 	/*
+	 * String Replace
+	 * @param  (string) $string - Our String to search
+	 * @param  (string) $find - Find this in our string
+	 * @param  (string) $replace - replace with this
+	 * @return (string) our updated string
+	 */
+	static function replace($string, $find, $replace){
+		$string = str_replace($find, $replace, $string);
+		return $string;
+	}
+
+
+	/*
 	 * Sanetize string
-	 * @param  (string) $text - Text string
+	 * @param  (string) $string - Text string
 	 * @param  (string) $nlc - New line convert, If false will be replaced
-	 * @param  (string) $allowed - Allowed HTML tags, defaults provided
 	 * @return (string)
 	*/
-	static function sanetize($text, $nlc=true, $allowed='') {
-		$StringAllow = ($allowed!='')? $allowed : conf::get('AllowSanetize');
-
-		$text = str::unquote($text);
-		$text = strip_tags($text, $StringAllow);
-		$text = ($nlc)?nl2br($text):$text;
-		$encoding = mb_detect_encoding($text,'UTF-8, ISO-8859-1, GBK');
-		$text = ($encoding!='UTF-8')?iconv($encoding,'utf-8',$text):$text;
-		return str::trim($text);
+	static function sanetize($string, $nlc=true) {
+		$string = str::unquote($string);
+		$string = ($nlc)?nl2br($string):$string;
+		$encoding = mb_detect_encoding($string,'UTF-8, ISO-8859-1, GBK');
+		$string = ($encoding!='UTF-8')?iconv($encoding,'utf-8',$string):$string;
+		return str::trim($string);
 	}
 
 
@@ -1640,9 +1658,22 @@ class str {
 	 * @param  (string) $by - Split at
 	 * @return (array) - Array of results
 	*/
-	static function split($string,$by) {
+	static function split($string, $by) {
 		$string = trim($string, $by);
 		return explode($by, $string);
+	}
+
+
+	/*
+	 * Remove HTML tags from a string
+	 * @param  (string) $string - string to remove invalid HTML tags from
+	 * @param  (string) $allowed - String of Allowed HTML Tags, Defaults to AllowSanetize in Config
+	 * @return (string)
+	 */
+	static function striphtml($string, $allowed='') {
+		$allowedtags = ($allowed=='')? conf::get('AllowSanetize') : $allowed ;
+		$string = strip_tags($string, $StringAllow);
+		return $string
 	}
 
 
