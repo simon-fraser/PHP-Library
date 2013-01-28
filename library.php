@@ -1274,7 +1274,7 @@ class req {
 	 * Contributed by David Turner <http://davidturner.name>
 	*/
 	function ajax(){
-	  if (!isset(server::get('HTTP_X_REQUESTED_WITH')) && @empty(server::get('HTTP_X_REQUESTED_WITH')) && @strtolower(server::get('HTTP_X_REQUESTED_WITH') != 'xmlhttprequest'){
+	  if (!server::get('HTTP_X_REQUESTED_WITH') && @strtolower(server::get('HTTP_X_REQUESTED_WITH') != 'xmlhttprequest')) {
 	    return false;
 	  }else{
 	    return true;
@@ -1696,7 +1696,7 @@ class str {
 	 */
 	static function striphtml($string, $allowed='<a><b><br><em><h1><h2><h3><h4><h5><h6><i><img><li><ol><p><strong><u><ul>') {
 		$string = strip_tags($string, $allowed);
-		return $string
+		return $string;
 	}
 
 
