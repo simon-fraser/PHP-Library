@@ -2,15 +2,14 @@
 /*
  * PHP Library -- A simplified toolkit for PHP
  *
- * @ version 1.5 Beta(β)
+ * @ version 1.6 Beta(β)
  * @ author Simon Fraser <http://simonf.co.uk>
- * @ acknowledgement php.net community, kirby toolkit
+ * @ acknowledgement php.net community, kirby toolkit, David Turner
  * @ copyright Copyright (c) 2012 Simon Fraser
  * @ license MIT License <http://www.opensource.org/licenses/mit-license.php>
 */
 
 conf::set('charset', 'utf-8');
-conf::set('AllowSanetize', '<a><b><br><em><h1><h2><h3><h4><h5><h6><i><img><li><ol><p><strong><u><ul>');
 
 error_reporting(E_ALL);
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
@@ -538,13 +537,23 @@ class db extends mysqli {
 	/*
 	 * Return list of fields from database and field information
 	 * @param  (string) $table - Query table name
-	 * @return (array) - Array of field information
+	 * @return (array) - Object of field information
 	*/
 	public function fields($table) {
 		$ourquery = "SELECT * FROM ".$table." LIMIT 1";
 		$result = self::query($ourquery,true);
 		return $result->fetch_fields();
-		$result->close();
+		self::disconnect();
+	}
+
+
+	/*
+	 * Return list of saved MySQL Procedures
+	 * @return () - Object of procedure events
+	*/
+	public function procedure(){
+		$query = "select db, type, specific_name, param_list, returns from mysql.proc where definer like concat('%', concat((substring_index( (select user()), '@', 1)), '%'))";
+		return self::query($query);
 		self::disconnect();
 	}
 
@@ -1258,6 +1267,21 @@ class password {
 */
 class req {
 
+
+	/*
+	 * Determines if page is being loaded using AJAX.
+	 * @return (boolean) - Either true or False return on weather request is Ajax
+	 * Contributed by David Turner <http://davidturner.name>
+	*/
+	function ajax(){
+	  if (!isset(server::get('HTTP_X_REQUESTED_WITH')) && @empty(server::get('HTTP_X_REQUESTED_WITH')) && @strtolower(server::get('HTTP_X_REQUESTED_WITH') != 'xmlhttprequest'){
+	    return false;
+	  }else{
+	    return true;
+	  }
+	}
+
+
 	/*
 	 * cUrl request a file
 	 * @param  (string) $request - The file you are requesting
@@ -1667,12 +1691,11 @@ class str {
 	/*
 	 * Remove HTML tags from a string
 	 * @param  (string) $string - string to remove invalid HTML tags from
-	 * @param  (string) $allowed - String of Allowed HTML Tags, Defaults to AllowSanetize in Config
+	 * @param  (string) $allowed - String of Allowed HTML Tags
 	 * @return (string)
 	 */
-	static function striphtml($string, $allowed='') {
-		$allowedtags = ($allowed=='')? conf::get('AllowSanetize') : $allowed ;
-		$string = strip_tags($string, $StringAllow);
+	static function striphtml($string, $allowed='<a><b><br><em><h1><h2><h3><h4><h5><h6><i><img><li><ol><p><strong><u><ul>') {
+		$string = strip_tags($string, $allowed);
 		return $string
 	}
 
@@ -1846,7 +1869,7 @@ class url {
 	 * @param  (string) $status - Optional status code
 	 * @return (header)
 	*/
-	static function go($url,$status=false) {
+	static function go($url, $status=false) {
 		if ($status) {
 			switch($status) {
 			case 301:
@@ -1985,14 +2008,13 @@ class video {
 	 * @param  (string) @colour - String contating hex colour for alternate vimeo players
 	 * @return (string) - Embed URL
 	*/
-	static function vimeo($link,$colour='00fbff') {
+	static function vimeo($link, $colour='00fbff') {
 		$embedhost = "http://player.vimeo.com/video/";
 		$embedvars = "?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;color=$colour";
 		$uri = parse_url($link);
 
 		//For seriously malformed urls
 		if ($uri === false) return false;
-
 		return $embedhost.substr($uri['path'], 1).$embedvars;
 	}
 

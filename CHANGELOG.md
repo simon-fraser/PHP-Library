@@ -1,6 +1,11 @@
 PHP Library Changes
 ==================
 
+##Release 1.6 January 2013
+- Added `db::procedure()` To help list any saved MySQL Procedures.
+- Added `req::ajax()` As provided by [David Turner](http://www.davidturner.name/) to detect when a request is being made by asynchronous JavaScript.
+- Alteration to `str::striphtml()` To use a local declaration of allowed tags instead of a global tag declaration.
+
 ##Release 1.5 January 2013
 - `content::get()`- Removed `str::sanetize()`, Can be called separately.
 - Removed strip_tags from `str::sanetize()`.
