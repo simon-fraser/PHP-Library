@@ -1,6 +1,12 @@
 PHP Library Changes
 ==================
 
+##Release 1.7 Januaray 2013
+- Updated instances of `str_replace()` with `str::replace()` for consistancy
+- Updated instances of `preg_match` & `preg_replace` with appropriate `ex` class methods for consistancy
+- Added `ex::matchsingle()` after evaluating the results of `ex::match()` under a single search environment.
+- Switched `$format` & `$datetime` variables in `timedate::format()`
+
 ##Release 1.6 January 2013
 - Added `db::procedure()` To help list any saved MySQL Procedures.
 - Added `req::ajax()` As provided by [David Turner](http://www.davidturner.name/) to detect when a request is being made by asynchronous JavaScript.
@@ -11,7 +17,6 @@ PHP Library Changes
 - Removed strip_tags from `str::sanetize()`.
 - Added `str::striphtml()` To remove HTML tags from a string.
 - Added `str::replace()` To normalize str_replace in line with toolbox
-
 
 ##Release 1.4 December 2012
 - Additional Functionality Added by [David Turner](http://www.davidturner.name/)

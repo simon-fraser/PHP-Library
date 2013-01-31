@@ -2,7 +2,7 @@
 /*
  * PHP Library -- A simplified toolkit for PHP
  *
- * @ version 1.6 Beta(β)
+ * @ version 1.7 Beta(β)
  * @ author Simon Fraser <http://simonf.co.uk>
  * @ acknowledgement php.net community, kirby toolkit, David Turner
  * @ copyright Copyright (c) 2012 Simon Fraser
@@ -10,7 +10,6 @@
 */
 
 conf::set('charset', 'utf-8');
-
 error_reporting(E_ALL);
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
@@ -263,13 +262,13 @@ class timedate {
 
 	/*
 	 * Return date / time formated string
+	 * @param  (string) $datetime - Unix timestamp to convert to date/time
 	 * @param  (string) $format - format parameter string like http://php.net/function.date.php
-	 * @param  (string) $datetime - string to convert to date/time
 	 * @return (string) - formated datetime string
 	*/
-	static function format($format="D jS M Y G:i:s", $datetime=null) {
+	static function format($datetime=null, $format="D jS M Y G:i:s") {
 		if (empty($datetime)) $datetime = time();
-		if (preg_match('~^[1-9][0-9]*$~', $datetime)==0) {
+		if (!ex::match('~^[1-9][0-9]*$~', $datetime, true)) {
 			$date = strtotime($datetime);
 		} else {
 			$date = $datetime;
@@ -687,6 +686,19 @@ class ex {
 
 
 	/*
+    * Match single (first) expression
+    * @param  (mixed) $patern - patern to replace
+    * @param  (mixed) $subject - subject to run match on
+    * @return (array) - array of matches & offset location
+   */
+   static function matchsingle($pattern,$subject,$bool=false) {
+      $result = preg_match($pattern, $subject, $matches);
+      if($bool) return $result;
+      return $matches;
+   }
+
+
+	/*
 	 * Replace expression
 	 * @param  (mixed) $patern - patern to replace
 	 * @param  (mixed) $subject - subject to run replacement on
@@ -952,6 +964,7 @@ class ftp {
 		$ls = ftp_rawlist($instance, $dir);
 		foreach ($ls as $list) {
 			$info = preg_split("/[\s]+/", $list, 9);
+			// $info = ex::split("/[\s]+/", $list);
          $point[] = array(
              'name'   	  => $info[8],
              'size'   	  => fs::stringsize($info[4]),
@@ -1447,7 +1460,8 @@ class server {
 		$info = array();
 		$lines = explode("\n", strip_tags(ob_get_clean(), "<tr><td><h2>"));
 		$cat="General";
-		foreach($lines as $line) {  preg_match("~<h2>(.*)</h2>~", $line, $match)? $cat = $match[1] : null;
+		foreach($lines as $line) {
+			preg_match("~<h2>(.*)</h2>~", $line, $match)? $cat = $match[1] : null;
 			if(preg_match("~<tr><td[^>]+>([^<]*)</td><td[^>]+>([^<]*)</td></tr>~", $line, $val)) {
 				 $info[$cat][$val[1]] = $val[2];
 			} elseif(preg_match("~<tr><td[^>]+>([^<]*)</td><td[^>]+>([^<]*)</td><td[^>]+>([^<]*)</td></tr>~", $line, $val)) {
@@ -1546,15 +1560,15 @@ class str {
                 '’'
                 );
 
-      $string = str_replace('\'', '’', str_replace($search, $replace, $string));
-      $string = preg_replace('/<([^<>]+)>/e', '"<" .str_replace("”", \'"\', "$1").">"', $string);
-      $string = preg_replace('/<([^<>]+)>/e', '"<" .str_replace("’", "\'", "$1").">"', $string);
+      $string = str::replace(str::replace($string, $search, $replace), '\'', '’');
+      $string = ex::replace('/<([^<>]+)>/e', $string, '"<" .str::replace($1, "”", \'"\').">"');
+      $string = ex::replace('/<([^<>]+)>/e', $string, '"<" .str::replace($1, "’", "\'").">"');
       $first = $string{0};
-      $first = str_replace($searchsingle, $replacestart, $first);
+      $first = str::replace($first, $searchsingle, $replacestart);
       $string = $first . substr($string, 1);
       $invert = strrev( $string );
       $last = $invert{0};
-      $last = str_replace($searchsingle, $replaceend, $last);
+      $last = str::replace($last, $searchsingle, $replaceend);
       $string = strrev(substr($invert, 1)) . $last;
       return $string;
   }
@@ -1615,7 +1629,7 @@ class str {
 	*/
 	static function excerpt($string, $length=140, $break='...', $removehtml=true) {
 		if($removehtml) $string = strip_tags($string);
-		$string = str_ireplace("\n", ' ', str::trim($string));
+		$string = str::replace(str::trim($string), "\n", ' ');
 
 		if(strlen($string) <= $length) return $string;
 		return ($length==0)? $string : substr($string, 0, strrpos(substr($string, 0, $length),' ')).$break;
@@ -1706,7 +1720,7 @@ class str {
 	 * @return (string)
 	*/
 	static function trim($string) {
-		$string = preg_replace('/\s\s+/u',' ',$string);
+		$string = ex::replace('/\s\s+/u', $string, ' ');
 		return trim($string);
 	}
 
@@ -1837,7 +1851,7 @@ class str {
 	$nums  = array('0','1','2','3','4','5','6','7','8','9');
 	$match = array('zero','one','two','three','four','five','six','seven','eight','nine');
 	foreach ($nums as $key => $value) {
-		$string = str_replace($nums[$key], $match[$key], $string);
+		$string = str::replace($string, $nums[$key], $match[$key]);
 	}
 	return $string;
 }
@@ -1907,10 +1921,10 @@ class url {
 	 * @return (string)
 	*/
 	static function strip($url='',$domain=false) {
-		$url = str_replace('http://','',$url);
-		$url = str_replace('https://','',$url);
-		$url = str_replace('ftp://','',$url);
-		$url = str_replace('www.','',$url);
+		$url = str::replace($url, 'http://', '');
+		$url = str::replace($url, 'https://', '');
+		$url = str::replace($url, 'ftp://', '');
+		$url = str::replace($url, 'www.', '');
 		if ($domain) {
 			$a = str::split($url,'/');
 			$url = ar::get($a, 0);
@@ -1925,7 +1939,7 @@ class url {
 	 * @return (string)
 	*/
 	static function strip_query($url) {
-		return preg_replace('/\?.*$/is', '', $url);
+		return ex::replace('/\?.*$/is', $url, '');
 	}
 
 
@@ -1935,7 +1949,7 @@ class url {
 	* @return (string)
 	*/
 	static function strip_hash($url) {
-		return preg_replace('/#.*$/is', '', $url);
+		return ex::replace('/#.*$/is', $url, '');
 	}
 
 
@@ -1945,7 +1959,7 @@ class url {
 	 * @return (boolean)
 	*/
 	static function valid($url) {
-		return preg_match('|^(https?\:\:?\/\/)?(www.)?[^.]+\.\w{2,8}|i', $url);
+		return ex::matchsingle('|^(https?\:\:?\/\/)?(www.)?[^.]+\.\w{2,8}|i', $url, true);
 	}
 
 
@@ -2050,9 +2064,10 @@ class visitor {
 		);
 
 		foreach($browsers as $_browser) {
-			if (preg_match("/($_browser)[\/ ]?([0-9.]*)/", $browser['useragent'], $match)) {
-				$browser['name'] = $match[1];
-				$browser['version'] = $match[2];
+			$browserMatch = ex::matchsingle("/($_browser)[\/ ]?([0-9.]*)/", $browser['useragent']);
+			if ($browserMatch) {
+				$browser['name'] = $browserMatch[1];
+				$browser['version'] = $browserMatch[2];
 				@list($browser['majorver'], $browser['minorver'], $browser['build']) = explode('.', $browser['version']);
 				break;
 			}
@@ -2097,7 +2112,8 @@ class visitor {
 		$agent = str::lower(server::get('HTTP_USER_AGENT'));
 
 		foreach($OS as $Name => $index) {
-			if (preg_match("/$index/i", $agent)) {
+			$osMatch = ex::matchsingle("/$index/i", $agent);
+			if ($osMatch) {
 				$os = $Name;
 				break;
 			}
